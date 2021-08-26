@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Quiz Page</title>
+       
+        <!-- Bootstrap CDN-->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+        <!-- Stylesheet -->
+        <link rel="stylesheet" href="stylesheet.css">
+    </head>
+    <body>
+
+        <div id="app">
+            <div class="container"> <!-- Quiz form container -->
+                <div class="row">
+                    <div class="col">
+                        <quiz-form></quiz-form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        
+         <!-- JS, Popper.js, and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+    
+    <script src="https://unpkg.com/vue"></script>
+    <script src="main.js" async defer></script>
+
+
+    <!--Quiz Form Template-->
+    <script type="text/x-template" id="quiz-form-template">
+        <div id="quiz-body">
+            <h1>Revision Quiz</h1>
+
+            <div id="quiz-information">
+                <p>This is a short MCQ designed to help you revise in preparation for your test.
+                    You can view the answers to the questions and their explanations once you have completed the quiz.
+                </p>
+
+                <p>Topic: Test 1</p>
+                <p>Number of Questions: 4</p>
+
+                <p>Please ensure that you <span><strong>ATTEMPT EVERY QUESTION</strong></span> before you submit the quiz.</p>
+            </div>
+
+            <div class="feedback-success" v-if="isCompleted">
+                <p>You've completed the quiz!</p>
+                <p><b>Your total score was {{ totalScore }}/4.</b></p>
+                <p>You can view the answers to the questions, and their explanations, below.</p>            
+            </div>
+        
+            <form @submit.prevent="checkSubmission">
+            
+            
+            <quiz-question v-for="question in questions"
+                :key="question.qstId"
+                :isCompleted="isCompleted"
+                :question="question"
+                :isDisabled="isDisabled"></quiz-question>
+
+                <div class="feedback-section">
+                    <div v-if="errors.length" class="feedback-error">
+                    <p>                       
+                        <b>You must attempt the following questions before you can submit:</b>
+                        <ul>
+                            <li v-for="error in errors">{{error}}</li>
+                        </ul>
+                    </p>                    
+                </div>
+
+                    <div class="feedback-success" v-if="isCompleted">
+                        <p>You've completed the quiz!</p>
+                        <p><b>Your total score was {{ totalScore }}/4.</b></p>  
+                        <p>You can view the answers to the questions, and their explanations, above.</p>             
+                    </div>
+                </div>
+
+                <button :class="['btn', 'btn-lg', 'btn-block', (isCompleted) ? 'btn-secondary' : 'btn-success' ]" type="submit" :disabled="isCompleted">
+                    {{ isCompleted ? 'Submitted' : 'Submit' }}</button>
+            </form>
+
+        </div>
+    </script>
+
+    <!-- Question Answer Show Explanation Template -->
+    <script type="text/x-template" id="quiz-ans-explanation-template">
+        <div id="explanation-section">
+            <p><b>Correct Answer: {{question.correctAns}}</b></p>
+            <a v-on:click="show = !show">
+              <span class="show-explanation">{{ !show ? 'SEE EXPLANATION' : 'HIDE EXPLANATION' }}</span>
+            </a>
+            <transition name="fade">
+            <div class="explanation">
+                <p v-if="show">
+                    <b>Explanation:</b> {{question.explanation}}
+                </p>
+            </div>
+            </transition>
+        </div>
+    </script>
+
+    <!-- Quiz Question Template-->
+    <script type="text/x-template" id="quiz-question-template">
+        <div class="quiz-question">
+            <div class="form-group question-text">
+                <h5>Question {{question.qstId}}</h5>
+                <p>{{question.qstText}}</p>
+            </div>
+
+        <!--CHANGE TO BE MADE: CREATE A QUIZ RADIO OPTION COMPONENT -->
+            <div class="radio-toolbar">
+                
+                    <input v-model="question.userInput" class="form-check-input" type="radio" :id=" 'radio-A' + question.qstId " value="A" :disabled="isDisabled">
+                    <label class="form-check-label" :for=" 'radio-A' + question.qstId ">
+                        {{question.optA}}
+                    </label>
+                
+                
+                    <input v-model="question.userInput" class="form-check-input" type="radio" :id=" 'radio-B' + question.qstId " value="B" :disabled="isDisabled">
+                    <label class="form-check-label" :for=" 'radio-B' + question.qstId ">
+                    {{question.optB}}
+                    </label>
+                
+                    <input v-model="question.userInput" class="form-check-input" type="radio" :id=" 'radio-C' + question.qstId " value="C" :disabled="isDisabled">
+                    <label class="form-check-label" :for=" 'radio-C' + question.qstId ">
+                        {{question.optC}}
+                    </label>
+                
+                    <input v-model="question.userInput" class="form-check-input" type="radio" :id=" 'radio-D' + question.qstId " value="D" :disabled="isDisabled">
+                    <label class="form-check-label" :for=" 'radio-D' + question.qstId ">
+                        {{question.optD}}
+                    </label>
+                
+            </div>
+
+            <div v-if="isCompleted">
+                <quiz-ans-explanation :question="question"></quiz-ans-explanation>
+            </div>
+
+        </div>   
+    </script>
+
+    <!-- Quiz Report Template-->
+    <script type="text/x-template" id="quiz-report-template">
+        <div id="report-section" v-if="isCompleted">
+            <h2>Report</h2>
+
+            <p>Total Score: <b>5</b></p>              
+
+            <h3>Feedback</h3>
+
+            <p>You have a good understanding of the following topics:</p>
+
+            <p>However you need to go over the following topics:</p>
+
+            <p>You can view the explanations to the questions above.</p>
+        </div>
+    </script>
+
+    </body>
+</html>
